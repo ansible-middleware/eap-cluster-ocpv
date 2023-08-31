@@ -3,4 +3,4 @@ rh_no_log: True
 jvm_package: java-11-openjdk-headless
 domain_name: '.internal.ansiblemiddleware.com'
 external_domain_name: 'eapamq.demos.ansiblemiddleware.com'
-ansible_ssh_common_args: '-J fedora@20.119.123.193:2222 -o ConnectTimeout=100'
+ansible_ssh_common_args: '-J fedora@20.119.123.193:2222 '
