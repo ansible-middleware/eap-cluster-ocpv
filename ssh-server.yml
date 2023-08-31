@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-admin
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8s-admin-role
+rules:
+- apiGroups: ["", "extensions", "apps", "networking.k8s.io"]
+  resources: ["deployments", "replicasets", "pods", "services", "ingresses", "secrets", "configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get"]  
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8s-admin-role-binding
+subjects:
+- kind: ServiceAccount
+  name: k8s-admin
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: k8s-admin-role
+  apiGroup: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eap-ssh-svc
+  labels:
+    app: ssh
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 2222
+  selector:
+    app: ssh
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eap-ssh
+  labels:
+    app: ssh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ssh
+  template:
+    metadata:
+      labels:
+        app: ssh
+    spec:
+      serviceAccountName: k8s-admin
+      containers:
+      - name: ssh
+        image: lscr.io/linuxserver/openssh-server:latest
+        ports:
+        - containerPort: 2222
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: USER_NAME
+          value: "fedora"
+        - name: PUBLIC_KEY
+          value: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDQMESY5NFTy0PSR5dhHMCZBxKaCroiS6q8wQoDU9dYmZgayqv3s77cSmLXPwxFVbzMAGUEAS+2sSt62mfvSoLaEAwgjiCU9htptNgl7/SvVX4ggXv7cczBAYfMhJn05B1HxkzzweX0WYcUCycXqObEMaSNqjrm9AsUf9WW485v9hRhzT6cgsOOejo8ad7Zzj3sZhudLyCYUrOJwlmWlkisOsNMz04fJXxwvD2Y4KlH2Tf1zviYJ98ZyPKLpCtVWVQWm1Ri1UGBDkAFkCYgaGW7eDHvrspi+9BRsria3oqwoL77FdQ1fQIhlaHeEpjc6wFBofGbKig9up1tcrX5OOd4QP9lZGuJPzqtvrQPAmZ6DVSjvBFwK2g3Ark5vO8JbMQ+aZacoKfEUjdH41BWpqI2Q1Wzj4sX1GwHg8ojAGt37/Tqyihtkjua+kMH+CuCTp5rPZBWBDE1TlsNdgJTQ603cM3XwkwZnrXzdmEQWV3/PrjpqDkKwr813czQH8cI9jE= guido@localhost.localdomain
+        - name: PASSWORD
+          value: password
+        - name: PASSWORD_ACCESS
+          value: "false"
+        - name: SUDO_ACCESS
+          value: "true"

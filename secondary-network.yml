@@ -1,0 +1,32 @@
+# This net-attach-def defines secondarynet-conf
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: kindexgw
+  namespace: kubevirt
+spec:
+  config: |
+    {
+    "cniVersion": "0.3.1",
+    "plugins": [
+      {
+        "type": "bridge",
+        "bridge": "kindexgw",
+        "ipam": {
+            "type": "host-local",
+            "ranges": [
+              [
+                {
+                  "subnet": "172.19.0.0/16",
+                  "rangeStart": "172.19.1.1",
+                  "rangeEnd": "172.19.255.254",
+                  "gateway": "172.19.0.1"
+                }
+              ]
+            ]
+
+        }
+      }
+    ]
+    }
+---
