@@ -1,7 +1,8 @@
 ---
 collections:
-  - name: redhat.runtimes_common
-  - name: redhat.eap
+  - name: middleware_automation.common
+  - name: middleware_automation.wildfly
+  - name: kubevirt.core
   - name: ansible.netcommon
   - name: ansible.posix
   

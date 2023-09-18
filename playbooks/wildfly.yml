@@ -1,38 +1,11 @@
 ---
-- name: Playbook for EAP Hosts
-  hosts: label_app_eap
+- name: Playbook for Wildfly Hosts
+  hosts: label_app_wildfly
   become: yes
   roles:
-    - redhat.eap.eap_install
-    - redhat.eap.eap_driver
-    - redhat.eap.eap_systemd
+    - middleware_automation.wildfly.wildfly_install
+    - middleware_automation.wildfly.wildfly_systemd
   pre_tasks:
-    - name: Enable and start the firewalld service
-      become: yes
-      ansible.builtin.systemd:
-        name: firewalld
-        enabled: yes
-        state: started
-    - name: "Configure firewall for EAP ports"
-      ansible.posix.firewalld:
-        port: "{{ item }}"
-        permanent: true
-        state: enabled
-        immediate: yes
-      loop:
-        - 8009/tcp
-        - 8080/tcp
-        - 9990/tcp
-        - 7600/tcp
-        - 7601/tcp
-    - name: Configure promtail
-      ansible.builtin.include_role:
-        name: promtail
-      vars:
-        promtail_job_name: eap
-        promtail_logfile: /opt/jboss_eap/jboss-eap-7.4/standalone/log/server.log
-        promtail_region: kubevirt
-      when: not skip_promtail is defined
     - name: Create cluster node list
       ansible.builtin.set_fact:
         eap_cluster_nodes: >
@@ -46,11 +19,9 @@
              ] }}
       loop: "{{ ansible_play_batch }}"
 
-- name: Playbook for EAP Hosts config and app deployment
-  hosts: eap
+- name: Playbook for Wildfly Hosts config and app deployment
+  hosts: label_app_wildfly
   become: yes
-  collections:
-    - redhat.eap
   serial: 1
   tasks:
     - name: Verify service is started
@@ -68,7 +39,7 @@
     - name: "Download demo app to deploy from {{ app_url }} into deployments"
       ansible.builtin.get_url:
         url: "{{ app_url }}"
-        dest: "{{ eap.home }}/standalone/deployments/"
+        dest: "{{ wildfly_home }}/standalone/deployments/"
         owner: eap
         group: eap
         mode: 0644

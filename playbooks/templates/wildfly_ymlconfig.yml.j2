@@ -5,12 +5,12 @@ wildfly-configuration:
   socket-binding-group:
     standard-sockets:
       remote-destination-outbound-socket-binding:
-        jgroups-kubevirt-eap1:
-          host: kubevirt-eap1
+        jgroups-kubevirt-wildfly1:
+          host: kubevirt-wildfly1
           port: 7600
       remote-destination-outbound-socket-binding:
-        jgroups-kubevirt-eap2:
-          host: kubevirt-eap2
+        jgroups-kubevirt-wildfly2:
+          host: kubevirt-wildfly2
           port: 7600
   subsystem:
     jgroups:
@@ -22,9 +22,9 @@ wildfly-configuration:
           protocol:
             TCPPING:
               socket-bindings:
-                {{ eap_cluster_nodes | map(attribute='address') }}
+                {{ wildfly_cluster_nodes | map(attribute='address') }}
               properties:
-                initial_hosts: "{{ eap_cluster_nodes | map(attribute='inventory_host') | join (',') }}"
+                initial_hosts: "{{ wildfly_cluster_nodes | map(attribute='inventory_host') | join (',') }}"
                 port_range: 0
             MERGE3:
             FD_SOCK:

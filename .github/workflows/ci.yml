@@ -1,0 +1,193 @@
+name: CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          path: ansible_collections/kubevirt/core
+          fetch-depth: 0
+      - run: |
+          mkdir -p /home/runner/.kube/
+          cp -rp ${GITHUB_WORKSPACE}/ansible_collections/kubevirt/core/tests/.kubeconfig /home/runner/.kube/config
+          cat /home/runner/.kube/config
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install yamllint, ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install yamllint ansible-core ansible-lint
+      - name: Run linter
+        run: |
+          ansible-lint --version
+          ansible-lint -v
+        working-directory: ./ansible_collections/kubevirt/core
+  sanity:
+    uses: ansible-network/github_actions/.github/workflows/sanity.yml@main
+    needs:
+      - linter
+    with:
+      matrix_include: "[]"
+      matrix_exclude: >-
+          [
+            {
+              "ansible-version": "stable-2.9"
+            },
+            {
+              "ansible-version": "stable-2.12",
+              "python-version": "3.7"
+            },
+            {
+              "ansible-version": "stable-2.12",
+              "python-version": "3.11"
+            },
+            {
+              "ansible-version": "stable-2.13",
+              "python-version": "3.7"
+            },
+            {
+              "ansible-version": "stable-2.13",
+              "python-version": "3.11"
+            },
+            {
+              "ansible-version": "stable-2.14",
+              "python-version": "3.7"
+            },
+            {
+              "ansible-version": "stable-2.14",
+              "python-version": "3.8"
+            },
+            {
+              "ansible-version": "stable-2.14",
+              "python-version": "3.11"
+            },
+            {
+              "ansible-version": "stable-2.15",
+              "python-version": "3.7"
+            },
+            {
+              "ansible-version": "stable-2.15",
+              "python-version": "3.8"
+            },
+            {
+              "ansible-version": "stable-2.15",
+              "python-version": "3.11"
+            },
+            {
+              "ansible-version": "milestone",
+              "python-version": "3.7"
+            },
+            {
+              "ansible-version": "milestone",
+              "python-version": "3.8"
+            },
+            {
+              "ansible-version": "milestone",
+              "python-version": "3.9"
+            },
+            {
+              "ansible-version": "devel",
+              "python-version": "3.7"
+            },
+            {
+              "ansible-version": "devel",
+              "python-version": "3.8"
+            },
+            {
+              "ansible-version": "devel",
+              "python-version": "3.9"
+            }
+          ]
+  integration:
+    env:
+      PY_COLORS: "1"
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version:
+          - stable-2.15
+        python-version:
+          - "3.11"
+    runs-on: ubuntu-latest
+
+    name: "py${{ matrix.python-version }} / ${{ matrix.ansible-version }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          path: ansible_collections/middleware_automation/eap-cluster-ocpv
+          fetch-depth: "0"
+
+      - name: install dependencies collection
+        run: |
+          ansible-galaxy collection install ansible.posix --force --pre -p /home/runner/collections
+          ansible-galaxy collection install cloud.common --force --pre -p /home/runner/collections
+          ansible-galaxy collection install kubernetes.core --force --pre -p /home/runner/collections
+          ansible-galaxy collection install kubevirt.core --force --pre -p /home/runner/collections
+          ansible-galaxy collection install middleware_automation.wildfly --force --pre -p /home/runner/collections
+
+      - name: install kind / kubectl
+        uses: helm/kind-action@v1.8.0
+        with:
+          install_only: true
+          version: v0.20.0
+          kubectl_version: v1.27.3
+
+      - name: deploy kubevirt
+        run: >-
+          ${{ env.source }}/hack/e2e-setup.sh \
+            -v \
+            --configure-inotify-limits \
+            --configure-secondary-network \
+            --deploy-kubevirt \
+            --deploy-kubevirt-cdi \
+            --deploy-kubevirt-common-instancetypes \
+            --deploy-cnao \
+            --create-cluster \
+            --create-nad
+        shell: bash
+        env:
+          CLUSTER_NAME: kv-testing
+          KIND: kind
+          KUBECTL: kubectl
+
+      - name: Set up Python ${{ matrix.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+          cache: 'pip'
+
+      - name: Install ansible and molecule
+        run: |
+          python -m pip install --upgrade pip
+          pip install 'molecule>=5.0.1' 'molecule-plugins[docker]>=23.0.0' ansible-core==${{ matrix.ansible_version }}
+          if [ -f ansible_collections/middleware_automation/eap-cluster-ocpv/requirements.txt ]; then
+            pip install -r ansible_collections/middleware_automation/eap-cluster-ocpv/requirements.txt
+          fi
+          if [ -f ansible_collections/middleware_automation/eap-cluster-ocpv/requirements.yml ]; then
+            ansible-galaxy collection install -r ansible_collections/middleware_automation/eap-cluster-ocpv/requirements.yml -p /home/runner/.ansible/collections --force-with-deps
+          fi
+          if [ -f ansible_collections/middleware_automation/eap-cluster-ocpv/molecule/requirements.yml ]; then
+            ansible-galaxy collection install -r ansible_collections/middleware_automation/eap-cluster-ocpv/molecule/requirements.yml -p /home/runner/.ansible/collections
+          fi
+
+      - name: Run molecule test
+        run: |
+          molecule --version
+          molecule test -s ${{ matrix.molecule_test }}
+        working-directory: ./ansible_collections/middleware_automation/eap-cluster-ocpv
