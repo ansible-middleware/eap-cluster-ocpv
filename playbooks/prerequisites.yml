@@ -8,6 +8,7 @@
         username: "{{ sub_username }}"
         password: "{{ sub_password }}"
         auto_attach: true
+      become: yes
     - name: "Install packages"
       ansible.builtin.include_role:
         name: fastpackages
