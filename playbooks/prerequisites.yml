@@ -2,6 +2,12 @@
 - name: Playbook for installing prerequisites
   hosts: all
   tasks:
+    - name: "Manage subscription"
+      redhat.rhel_system_roles.redhat_subscription:
+        state: present
+        username: "{{ sub_username }}"
+        password: "{{ sub_password }}"
+        auto_attach: true
     - name: "Install packages"
       ansible.builtin.include_role:
         name: fastpackages
