@@ -1,6 +1,6 @@
 ---
 - name: Playbook for EAP Hosts
-  hosts: label_app_kubecon_ocpv_ansible_demo
+  hosts: label_app_kubecon
   become: yes
   roles:
     - redhat.eap.eap_install
