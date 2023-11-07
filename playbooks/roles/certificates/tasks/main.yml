@@ -45,7 +45,7 @@
       become: true
       delegate_to: "{{ item }}"
       run_once: True
-      loop: "{{ groups['loadbalancer'] }}"
+      loop: "{{ groups['loadbalancer'] | default([]) }}"
   rescue:
     - debug:
         msg: "External service name TLS certificate not found"
@@ -61,7 +61,7 @@
       become: true
       run_once: True
       delegate_to: "{{ item }}"
-      loop: "{{ groups['loadbalancer'] }}"
+      loop: "{{ groups['loadbalancer'] | default([]) }}"
   rescue:
     - debug:
         msg: "External service name TLS private key not found"
