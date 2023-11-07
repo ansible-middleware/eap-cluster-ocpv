@@ -2,5 +2,6 @@ plugin: kubevirt.core.kubevirt
 connections:
   - host: https://kubernetes.default.svc
     validate_certs: false
+    create_groups: true
     namespaces:
       - kubecon
