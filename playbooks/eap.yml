@@ -1,7 +1,6 @@
 ---
 - name: Playbook for EAP Hosts
   hosts: all
-  become: yes
   roles:
     - redhat.eap.eap_install
     - redhat.eap.eap_systemd
