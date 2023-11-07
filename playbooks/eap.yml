@@ -1,10 +1,9 @@
 ---
 - name: Playbook for EAP Hosts
-  hosts: label_app_eap
+  hosts: label_app_kubecon_ocpv_ansible_demo
   become: yes
   roles:
     - redhat.eap.eap_install
-    - redhat.eap.eap_driver
     - redhat.eap.eap_systemd
   pre_tasks:
     - name: Enable and start the firewalld service
