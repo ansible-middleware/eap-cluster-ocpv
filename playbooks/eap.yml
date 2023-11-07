@@ -38,7 +38,7 @@
       loop: "{{ ansible_play_batch }}"
 
 - name: Playbook for EAP Hosts config and app deployment
-  hosts: eap
+  hosts: all
   become: yes
   collections:
     - redhat.eap
@@ -59,7 +59,7 @@
     - name: "Download demo app to deploy from {{ app_url }} into deployments"
       ansible.builtin.get_url:
         url: "{{ app_url }}"
-        dest: "{{ eap.home }}/standalone/deployments/"
+        dest: "{{ eap.home }}/standalone/deployments/info.war"
         owner: eap
         group: eap
         mode: 0644

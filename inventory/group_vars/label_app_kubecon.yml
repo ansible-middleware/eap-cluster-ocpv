@@ -34,5 +34,3 @@ jdbc_driver_jar_url: "https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-ja
 jdbc_driver_jar_installation_path: "{{ jdbc_driver_module_dir }}/{{ jdbc_driver_jar_filename }}"
 jdbc_driver_module_name: "org.mariadb"
 
-app_url: https://github.com/ansible-middleware/addressbook/releases/download/1.0.7/addressbook.war
-addressbook_jdbc_url: "{{ site_jdbc_url }}/addressbook"
