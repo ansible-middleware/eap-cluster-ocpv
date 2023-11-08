@@ -34,3 +34,4 @@ jdbc_driver_jar_url: "https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-ja
 jdbc_driver_jar_installation_path: "{{ jdbc_driver_module_dir }}/{{ jdbc_driver_jar_filename }}"
 jdbc_driver_module_name: "org.mariadb"
 
+app_url: https://drive.google.com/uc?export=download&id=1w9ss5okctnjUvRAxhPEPyC7DmbUwmbhb
