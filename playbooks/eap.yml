@@ -1,5 +1,5 @@
 ---
-- name: Playbook for EAP Hosts
+- name: Playbook for EAP Hosts install
   hosts: all
   roles:
     - redhat.eap.eap_install
@@ -36,11 +36,15 @@
              ] }}
       loop: "{{ ansible_play_batch }}"
 
-- name: Playbook for EAP Hosts config and app deployment
+- name: Playbook for EAP Hosts config
   hosts: all
   become: yes
   roles:
     - redhat.eap.eap_systemd
+
+- name: Playbook for EAP Hosts config and app deployment
+  hosts: all
+  become: yes
   serial: 1
   post_tasks:
     - name: Verify service is started
