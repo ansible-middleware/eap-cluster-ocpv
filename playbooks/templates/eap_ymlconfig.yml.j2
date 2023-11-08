@@ -6,11 +6,11 @@ wildfly-configuration:
     standard-sockets:
       remote-destination-outbound-socket-binding:
         jgroups-kubecon-eap1:
-          host: kubecon-eap1
+          host: {{ eap_cluster_nodes | map(attribute='value') | first }}
           port: 7600
       remote-destination-outbound-socket-binding:
         jgroups-kubecon-eap2:
-          host: kubecon-eap2
+          host: {{ eap_cluster_nodes | map(attribute='value') | last }}
           port: 7600
   subsystem:
     jgroups:
