@@ -3,7 +3,6 @@
   hosts: all
   roles:
     - redhat.eap.eap_install
-    - redhat.eap.eap_systemd
   pre_tasks:
     - name: Enable and start the firewalld service
       become: yes
@@ -40,10 +39,10 @@
 - name: Playbook for EAP Hosts config and app deployment
   hosts: all
   become: yes
-  collections:
-    - redhat.eap
+  roles:
+    - redhat.eap.eap_systemd
   serial: 1
-  tasks:
+  post_tasks:
     - name: Verify service is started
       ansible.builtin.service:
         name: eap
